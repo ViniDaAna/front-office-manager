@@ -190,20 +190,21 @@ export default function App() {
   }
 
   function continueDay() {
-    const pendingDecision = state.decisions?.find(
-      (decision) => decision.status === 'pending',
-    )
+  if (!state) return
 
-    if (pendingDecision) {
-      setSelectedDecisionId(pendingDecision.id)
-      return
-    }
+  const pendingDecision = state.decisions?.find(
+    (decision) => decision.status === 'pending',
+  )
 
-    setState((current) =>
-      current ? advanceOneDay(current) : current,
-    )
+  if (pendingDecision) {
+    setSelectedDecisionId(pendingDecision.id)
+    return
   }
 
+  setState((current) =>
+    current ? advanceOneDay(current) : current,
+  )
+}
   function resolveDecision(
     decision: Decision,
     optionId: string,
