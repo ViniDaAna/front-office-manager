@@ -1,4 +1,7 @@
-import type { Franchise } from '../domain/types'
+import type {
+  Franchise,
+  FranchiseAlignment,
+} from '../domain/types'
 
 export const franchises: Franchise[] = [
   // EASTERN CONFERENCE
@@ -215,5 +218,169 @@ export const franchises: Franchise[] = [
     name: 'Jazz',
     abbreviation: 'UTA',
     conference: 'West',
+  },
+]
+
+export const franchiseAlignments: FranchiseAlignment[] = [
+  // ATLANTIC
+  {
+    franchiseId: 'bos',
+    conference: 'East',
+    division: 'Atlantic',
+  },
+  {
+    franchiseId: 'bkn',
+    conference: 'East',
+    division: 'Atlantic',
+  },
+  {
+    franchiseId: 'nyk',
+    conference: 'East',
+    division: 'Atlantic',
+  },
+  {
+    franchiseId: 'phi',
+    conference: 'East',
+    division: 'Atlantic',
+  },
+  {
+    franchiseId: 'tor',
+    conference: 'East',
+    division: 'Atlantic',
+  },
+
+  // CENTRAL
+  {
+    franchiseId: 'chi',
+    conference: 'East',
+    division: 'Central',
+  },
+  {
+    franchiseId: 'cle',
+    conference: 'East',
+    division: 'Central',
+  },
+  {
+    franchiseId: 'det',
+    conference: 'East',
+    division: 'Central',
+  },
+  {
+    franchiseId: 'ind',
+    conference: 'East',
+    division: 'Central',
+  },
+  {
+    franchiseId: 'mil',
+    conference: 'East',
+    division: 'Central',
+  },
+
+  // SOUTHEAST
+  {
+    franchiseId: 'atl',
+    conference: 'East',
+    division: 'Southeast',
+  },
+  {
+    franchiseId: 'cha',
+    conference: 'East',
+    division: 'Southeast',
+  },
+  {
+    franchiseId: 'mia',
+    conference: 'East',
+    division: 'Southeast',
+  },
+  {
+    franchiseId: 'orl',
+    conference: 'East',
+    division: 'Southeast',
+  },
+  {
+    franchiseId: 'was',
+    conference: 'East',
+    division: 'Southeast',
+  },
+
+  // NORTHWEST
+  {
+    franchiseId: 'den',
+    conference: 'West',
+    division: 'Northwest',
+  },
+  {
+    franchiseId: 'min',
+    conference: 'West',
+    division: 'Northwest',
+  },
+  {
+    franchiseId: 'okc',
+    conference: 'West',
+    division: 'Northwest',
+  },
+  {
+    franchiseId: 'por',
+    conference: 'West',
+    division: 'Northwest',
+  },
+  {
+    franchiseId: 'uta',
+    conference: 'West',
+    division: 'Northwest',
+  },
+
+  // PACIFIC
+  {
+    franchiseId: 'gsw',
+    conference: 'West',
+    division: 'Pacific',
+  },
+  {
+    franchiseId: 'lac',
+    conference: 'West',
+    division: 'Pacific',
+  },
+  {
+    franchiseId: 'lal',
+    conference: 'West',
+    division: 'Pacific',
+  },
+  {
+    franchiseId: 'phx',
+    conference: 'West',
+    division: 'Pacific',
+  },
+  {
+    franchiseId: 'sac',
+    conference: 'West',
+    division: 'Pacific',
+  },
+
+  // SOUTHWEST
+  {
+    franchiseId: 'dal',
+    conference: 'West',
+    division: 'Southwest',
+  },
+  {
+    franchiseId: 'hou',
+    conference: 'West',
+    division: 'Southwest',
+  },
+  {
+    franchiseId: 'mem',
+    conference: 'West',
+    division: 'Southwest',
+  },
+  {
+    franchiseId: 'nop',
+    conference: 'West',
+    division: 'Southwest',
+  },
+  {
+    franchiseId: 'sas',
+    conference: 'West',
+    division: 'Southwest',
   },
 ]
