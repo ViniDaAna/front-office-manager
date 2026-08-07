@@ -215,7 +215,27 @@ export interface FranchiseManagementState {
 
   objectives: FranchiseObjective[]
 }
-
+/*
+ * Estado completo da liga dentro de uma carreira.
+ *
+ * Aqui ficam informações mutáveis do universo.
+ * A identidade estática das franquias continua
+ * separada em src/data/franchises.ts.
+ */
+export interface LeagueState {
+  /*
+   * Estado administrativo de cada franquia,
+   * indexado pelo ID da organização.
+   *
+   * Exemplo:
+   * franchiseManagement['sas']
+   * franchiseManagement['bos']
+   */
+  franchiseManagement: Record<
+    string,
+    FranchiseManagementState
+  >
+}
 export interface GameState {
   currentDate: string
   userFranchiseId: string
@@ -226,11 +246,20 @@ export interface GameState {
   day: number
 
   /*
-   * Ainda utilizado pelo protótipo atual.
+   * Estado do universo da carreira.
    *
-   * Quando o módulo de franquia estiver conectado
-   * ao mundo completo, essa informação passará
-   * a viver dentro de FranchiseManagementState.
+   * Está opcional temporariamente para manter
+   * compatibilidade com saves criados antes
+   * da introdução do LeagueState.
+   */
+  league?: LeagueState
+
+  /*
+   * Campo legado do primeiro protótipo.
+   *
+   * Será removido somente depois que a direção
+   * organizacional estiver completamente migrada
+   * para FranchiseManagementState.
    */
   organizationDirection?: OrganizationDirection
 }
