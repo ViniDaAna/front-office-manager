@@ -238,6 +238,14 @@ export interface LeagueState {
   >
 }
 export interface GameState {
+    /*
+   * Versão estrutural do formato do save.
+   *
+   * Diferente da versão do jogo.
+   * Serve para sabermos como interpretar
+   * e migrar carreiras antigas.
+   */
+  schemaVersion: number
   currentDate: string
   userFranchiseId: string
 
