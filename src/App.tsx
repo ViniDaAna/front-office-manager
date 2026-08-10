@@ -7,41 +7,9 @@ import type {
   OrganizationDirection,
 } from './domain/types'
 import { advanceOneDay } from './services/simulation'
+import { createNewGame } from './services/newGame'
 import { clearGame, loadGame, saveGame } from './services/storage'
 import './styles/app.css'
-
-const initialMessages: InboxMessage[] = [
-  {
-    id: 'welcome-1',
-    date: '2026-08-07',
-    category: 'Owner',
-    title: 'Bem-vindo ao front office',
-    body:
-      'Sua primeira responsabilidade é definir a direção da organização. O mundo da liga continuará avançando mesmo quando você não estiver envolvido diretamente em cada decisão.',
-    read: false,
-    kind: 'information',
-  },
-  {
-    id: 'welcome-2',
-    date: '2026-08-07',
-    category: 'Staff',
-    title: 'Reunião inicial com a comissão',
-    body:
-      'A estrutura atual de staff será avaliada nas próximas versões. O objetivo é que cada funcionário tenha carreira, atributos, contrato, reputação e ambições próprias.',
-    read: false,
-    kind: 'information',
-  },
-]
-
-function createNewGame(franchiseId: string): GameState {
-  return {
-    currentDate: '2026-08-07',
-    userFranchiseId: franchiseId,
-    inbox: initialMessages,
-    day: 0,
-    decisions: [],
-  }
-}
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat('pt-BR', {
