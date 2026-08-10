@@ -1,4 +1,5 @@
 import { franchises } from '../data/franchises'
+import { CURRENT_SCHEMA_VERSION } from '../domain/schema'
 
 import type {
   FranchiseManagementState,
@@ -9,7 +10,6 @@ import type {
 
 const SAVE_KEY = 'front-office-manager-save-v1'
 
-const CURRENT_SCHEMA_VERSION = 2
 
 function isObject(
   value: unknown,
