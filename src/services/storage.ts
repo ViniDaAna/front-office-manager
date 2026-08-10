@@ -1,8 +1,15 @@
-import type { GameState } from '../domain/types'
+import { franchises } from '../data/franchises'
+
+import type {
+  FranchiseManagementState,
+  GameState,
+  LeagueState,
+  OrganizationDirection,
+} from '../domain/types'
 
 const SAVE_KEY = 'front-office-manager-save-v1'
 
-const CURRENT_SCHEMA_VERSION = 1
+const CURRENT_SCHEMA_VERSION = 2
 
 function isObject(
   value: unknown,
@@ -25,6 +32,105 @@ function hasBaseGameStateStructure(
   )
 }
 
+function isOrganizationDirection(
+  value: unknown,
+): value is OrganizationDirection {
+  return (
+    value === 'win-now' ||
+    value === 'balanced' ||
+    value === 'rebuild'
+  )
+}
+
+function createEmptyFranchiseManagement(): Record<
+  string,
+  FranchiseManagementState
+> {
+  return Object.fromEntries(
+    franchises.map((franchise) => [
+      franchise.id,
+      {
+        franchiseId: franchise.id,
+        objectives: [],
+      },
+    ]),
+  )
+}
+
+function migrateSchema0To1(
+  save: Record<string, unknown>,
+): GameState {
+  return {
+    ...save,
+    schemaVersion: 1,
+  } as unknown as GameState
+}
+
+function migrateSchema1To2(
+  save: GameState,
+): GameState {
+  const franchiseManagement =
+    createEmptyFranchiseManagement()
+
+  /*
+   * Preserva qualquer estado administrativo
+   * que já exista no save.
+   */
+  if (save.league?.franchiseManagement) {
+    for (const franchise of franchises) {
+      const existing =
+        save.league.franchiseManagement[franchise.id]
+
+      if (existing) {
+        franchiseManagement[franchise.id] = {
+          ...existing,
+          franchiseId: franchise.id,
+          objectives: existing.objectives ?? [],
+        }
+      }
+    }
+  }
+
+  /*
+   * No schema antigo, a direção da organização
+   * ficava diretamente no GameState.
+   *
+   * Agora ela pertence ao estado administrativo
+   * da franquia controlada pelo jogador.
+   */
+  if (
+    isOrganizationDirection(
+      save.organizationDirection,
+    )
+  ) {
+    const userManagement =
+      franchiseManagement[save.userFranchiseId]
+
+    if (userManagement) {
+      userManagement.organizationDirection =
+        save.organizationDirection
+    }
+  }
+
+  const league: LeagueState = {
+    franchiseManagement,
+  }
+
+  /*
+   * Remove o campo legado do objeto migrado.
+   */
+  const {
+    organizationDirection: _legacyDirection,
+    ...saveWithoutLegacyDirection
+  } = save
+
+  return {
+    ...saveWithoutLegacyDirection,
+    schemaVersion: 2,
+    league,
+  }
+}
+
 function migrateSave(
   rawSave: unknown,
 ): GameState | null {
@@ -36,52 +142,58 @@ function migrateSave(
     return null
   }
 
+  let save: GameState
+
   /*
-   * Saves criados antes da introdução do
-   * schemaVersion são considerados schema 0.
-   *
-   * A primeira migração apenas adiciona
-   * a versão estrutural.
+   * Saves anteriores ao sistema de versões
+   * são tratados como schema 0.
    */
   if (rawSave.schemaVersion === undefined) {
-    return {
-      ...rawSave,
-      schemaVersion: 1,
-    } as unknown as GameState
-  }
+    save = migrateSchema0To1(rawSave)
+  } else {
+    if (typeof rawSave.schemaVersion !== 'number') {
+      return null
+    }
 
-  if (typeof rawSave.schemaVersion !== 'number') {
-    return null
-  }
+    if (
+      rawSave.schemaVersion >
+      CURRENT_SCHEMA_VERSION
+    ) {
+      console.error(
+        `Este save usa schema ${rawSave.schemaVersion}, mas o jogo suporta até schema ${CURRENT_SCHEMA_VERSION}.`,
+      )
 
-  /*
-   * Save já está na versão atual.
-   */
-  if (rawSave.schemaVersion === CURRENT_SCHEMA_VERSION) {
-    return rawSave as unknown as GameState
-  }
+      return null
+    }
 
-  /*
-   * Se um save tiver sido criado por uma versão
-   * futura do jogo, esta versão atual não tenta
-   * interpretá-lo silenciosamente.
-   */
-  if (rawSave.schemaVersion > CURRENT_SCHEMA_VERSION) {
-    console.error(
-      `Este save usa schema ${rawSave.schemaVersion}, mas o jogo suporta até schema ${CURRENT_SCHEMA_VERSION}.`,
-    )
-
-    return null
+    save = rawSave as unknown as GameState
   }
 
   /*
-   * Futuras migrações serão encadeadas aqui.
+   * Migrações são aplicadas sequencialmente.
    *
-   * Exemplo:
-   * schema 1 → schema 2
-   * schema 2 → schema 3
+   * No futuro:
+   * 1 → 2 → 3 → 4...
    */
-  return null
+  while (
+    save.schemaVersion <
+    CURRENT_SCHEMA_VERSION
+  ) {
+    switch (save.schemaVersion) {
+      case 1:
+        save = migrateSchema1To2(save)
+        break
+
+      default:
+        console.error(
+          `Não existe migração disponível para o schema ${save.schemaVersion}.`,
+        )
+
+        return null
+    }
+  }
+
+  return save
 }
 
 export function saveGame(
@@ -104,17 +216,18 @@ export function saveGame(
 
 export function loadGame(): GameState | null {
   try {
-    const savedState = localStorage.getItem(
-      SAVE_KEY,
-    )
+    const savedState =
+      localStorage.getItem(SAVE_KEY)
 
     if (!savedState) {
       return null
     }
 
-    const rawSave: unknown = JSON.parse(savedState)
+    const rawSave: unknown =
+      JSON.parse(savedState)
 
-    const migratedSave = migrateSave(rawSave)
+    const migratedSave =
+      migrateSave(rawSave)
 
     if (!migratedSave) {
       console.error(
@@ -125,13 +238,18 @@ export function loadGame(): GameState | null {
     }
 
     /*
-     * Se um save antigo foi migrado,
-     * já persistimos sua versão atualizada.
+     * Persistimos novamente quando o save
+     * carregado passou por uma migração.
      */
-    if (
+    const originalVersion =
       isObject(rawSave) &&
-      rawSave.schemaVersion !==
-        migratedSave.schemaVersion
+      typeof rawSave.schemaVersion === 'number'
+        ? rawSave.schemaVersion
+        : 0
+
+    if (
+      originalVersion !==
+      migratedSave.schemaVersion
     ) {
       saveGame(migratedSave)
     }
