@@ -192,26 +192,27 @@ export interface FranchiseObjective {
   deadlineDate?: string
 }
 
-/*
- * Estado administrativo de uma franquia dentro de um save.
- *
- * Esse objeto pode mudar completamente com o passar
- * das temporadas sem alterar a identidade da franquia.
- */
 export interface FranchiseManagementState {
   franchiseId: string
 
-  owner: OwnerProfile
+  /*
+   * Esses módulos serão preenchidos conforme
+   * seus dados oficiais forem carregados.
+   *
+   * Não usamos valores fictícios apenas para
+   * satisfazer o código.
+   */
+  owner?: OwnerProfile
 
   organizationDirection?: OrganizationDirection
 
-  ownerTrust: number
-  fanApproval: number
+  ownerTrust?: number
+  fanApproval?: number
 
-  jobSecurity: JobSecurity
+  jobSecurity?: JobSecurity
 
-  facilities: FranchiseFacilities
-  finances: FranchiseFinances
+  facilities?: FranchiseFacilities
+  finances?: FranchiseFinances
 
   objectives: FranchiseObjective[]
 }
