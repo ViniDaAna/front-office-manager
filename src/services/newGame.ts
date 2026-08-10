@@ -105,7 +105,7 @@ const league = createInitialLeagueState()
 
 validateInitialLeagueState(league)
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     currentDate: START_DATE,
     userFranchiseId,
 
