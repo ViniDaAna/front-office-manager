@@ -134,7 +134,14 @@ export default function App() {
     state.decisions?.find(
       (decision) => decision.id === selectedDecisionId,
     ) ?? null
+const userManagement =
+  state.league?.franchiseManagement[
+    state.userFranchiseId
+  ]
 
+const organizationDirection =
+  userManagement?.organizationDirection ??
+  state.organizationDirection
   function openMessage(message: InboxMessage) {
     setState((current) =>
       current
@@ -186,12 +193,33 @@ export default function App() {
         'rebuild',
       ]
 
-      const direction = validDirections.includes(
-        optionId as OrganizationDirection,
-      )
-        ? (optionId as OrganizationDirection)
-        : current.organizationDirection
+  const currentManagement =
+  current.league?.franchiseManagement[
+    current.userFranchiseId
+  ]
 
+if (!current.league || !currentManagement) {
+  console.error(
+    'Não foi possível encontrar o estado administrativo da franquia do usuário.',
+  )
+
+  return current
+}
+
+if (
+  !validDirections.includes(
+    optionId as OrganizationDirection,
+  )
+) {
+  console.error(
+    `Direção organizacional inválida: ${optionId}`,
+  )
+
+  return current
+}
+
+const direction =
+  optionId as OrganizationDirection
       const confirmationMessage: InboxMessage = {
         id: `decision-result-${decision.id}`,
         date: current.currentDate,
@@ -205,7 +233,18 @@ export default function App() {
       return {
         ...current,
 
-        organizationDirection: direction,
+        league: {
+  ...current.league,
+
+  franchiseManagement: {
+    ...current.league.franchiseManagement,
+
+    [current.userFranchiseId]: {
+      ...currentManagement,
+      organizationDirection: direction,
+    },
+  },
+},
 
         decisions:
           current.decisions?.map((item) =>
@@ -353,9 +392,9 @@ export default function App() {
               </p>
 
               <h3>
-                {directionLabel(
-                  state.organizationDirection,
-                )}
+               {directionLabel(
+  organizationDirection,
+)}
               </h3>
 
               <p>
