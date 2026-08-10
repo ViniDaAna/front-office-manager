@@ -183,7 +183,9 @@ function migrateSave(
       case 1:
         save = migrateSchema1To2(save)
         break
-
+      case 2:
+        save = migrateSchema2To3(save)
+        break
       default:
         console.error(
           `Não existe migração disponível para o schema ${save.schemaVersion}.`,
