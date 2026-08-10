@@ -53,7 +53,42 @@ function createInitialLeagueState(): LeagueState {
     franchiseManagement: createInitialFranchiseManagement(),
   }
 }
+function validateInitialLeagueState(
+  league: LeagueState,
+): void {
+  const franchiseIds = franchises.map(
+    (franchise) => franchise.id,
+  )
 
+  const uniqueFranchiseIds = new Set(franchiseIds)
+
+  if (uniqueFranchiseIds.size !== franchises.length) {
+    throw new Error(
+      'Existem IDs de franquia duplicados nos dados da liga.',
+    )
+  }
+
+  const managementIds = Object.keys(
+    league.franchiseManagement,
+  )
+
+  if (managementIds.length !== franchises.length) {
+    throw new Error(
+      `Estado inicial inválido: esperado ${franchises.length} franquias, encontrado ${managementIds.length}.`,
+    )
+  }
+
+  const missingFranchises = franchiseIds.filter(
+    (franchiseId) =>
+      !league.franchiseManagement[franchiseId],
+  )
+
+  if (missingFranchises.length > 0) {
+    throw new Error(
+      `Franquias ausentes no estado inicial: ${missingFranchises.join(', ')}`,
+    )
+  }
+}
 export function createNewGame(
   userFranchiseId: string,
 ): GameState {
@@ -66,7 +101,9 @@ export function createNewGame(
       `Franquia inválida ao criar carreira: ${userFranchiseId}`,
     )
   }
+const league = createInitialLeagueState()
 
+validateInitialLeagueState(league)
   return {
     currentDate: START_DATE,
     userFranchiseId,
@@ -76,6 +113,6 @@ export function createNewGame(
 
     day: 0,
 
-    league: createInitialLeagueState(),
+    league,
   }
 }
