@@ -1,4 +1,5 @@
 import { franchises } from '../data/franchises'
+import { CURRENT_SCHEMA_VERSION } from '../domain/schema'
 import type {
   FranchiseManagementState,
   GameState,
@@ -105,7 +106,7 @@ const league = createInitialLeagueState()
 
 validateInitialLeagueState(league)
   return {
-    schemaVersion: 2,
+schemaVersion: CURRENT_SCHEMA_VERSION,
     currentDate: START_DATE,
     userFranchiseId,
 
