@@ -10,7 +10,6 @@ import type {
 
 const SAVE_KEY = 'front-office-manager-save-v1'
 
-
 function isObject(
   value: unknown,
 ): value is Record<string, unknown> {
@@ -57,6 +56,12 @@ function createEmptyFranchiseManagement(): Record<
   )
 }
 
+/*
+ * SCHEMA 0 → 1
+ *
+ * Saves criados antes da existência de schemaVersion
+ * recebem sua primeira versão estrutural.
+ */
 function migrateSchema0To1(
   save: Record<string, unknown>,
 ): GameState {
@@ -66,16 +71,21 @@ function migrateSchema0To1(
   } as unknown as GameState
 }
 
+/*
+ * SCHEMA 1 → 2
+ *
+ * Introduz o LeagueState e cria um estado
+ * administrativo para todas as franquias.
+ *
+ * Também preserva a antiga organizationDirection
+ * da franquia controlada pelo jogador.
+ */
 function migrateSchema1To2(
   save: GameState,
 ): GameState {
   const franchiseManagement =
     createEmptyFranchiseManagement()
 
-  /*
-   * Preserva qualquer estado administrativo
-   * que já exista no save.
-   */
   if (save.league?.franchiseManagement) {
     for (const franchise of franchises) {
       const existing =
@@ -91,13 +101,6 @@ function migrateSchema1To2(
     }
   }
 
-  /*
-   * No schema antigo, a direção da organização
-   * ficava diretamente no GameState.
-   *
-   * Agora ela pertence ao estado administrativo
-   * da franquia controlada pelo jogador.
-   */
   if (
     isOrganizationDirection(
       save.organizationDirection,
@@ -116,9 +119,6 @@ function migrateSchema1To2(
     franchiseManagement,
   }
 
-  /*
-   * Remove o campo legado do objeto migrado.
-   */
   const {
     organizationDirection: _legacyDirection,
     ...saveWithoutLegacyDirection
@@ -127,6 +127,76 @@ function migrateSchema1To2(
   return {
     ...saveWithoutLegacyDirection,
     schemaVersion: 2,
+    league,
+  }
+}
+
+/*
+ * SCHEMA 2 → 3
+ *
+ * Consolida organizationDirection dentro do
+ * FranchiseManagementState.
+ *
+ * Alguns saves schema 2 ainda podem possuir
+ * uma cópia antiga da direção diretamente
+ * no GameState. Esta migração preserva esse dado
+ * antes de remover o campo legado.
+ *
+ * IMPORTANTE:
+ * Esta migração já está preparada, mas somente
+ * será executada quando CURRENT_SCHEMA_VERSION
+ * passar oficialmente para 3.
+ */
+function migrateSchema2To3(
+  save: GameState,
+): GameState {
+  const franchiseManagement =
+    createEmptyFranchiseManagement()
+
+  if (save.league?.franchiseManagement) {
+    for (const franchise of franchises) {
+      const existing =
+        save.league.franchiseManagement[franchise.id]
+
+      if (existing) {
+        franchiseManagement[franchise.id] = {
+          ...existing,
+          franchiseId: franchise.id,
+          objectives: existing.objectives ?? [],
+        }
+      }
+    }
+  }
+
+  if (
+    isOrganizationDirection(
+      save.organizationDirection,
+    )
+  ) {
+    const userManagement =
+      franchiseManagement[save.userFranchiseId]
+
+    if (
+      userManagement &&
+      !userManagement.organizationDirection
+    ) {
+      userManagement.organizationDirection =
+        save.organizationDirection
+    }
+  }
+
+  const league: LeagueState = {
+    franchiseManagement,
+  }
+
+  const {
+    organizationDirection: _legacyDirection,
+    ...saveWithoutLegacyDirection
+  } = save
+
+  return {
+    ...saveWithoutLegacyDirection,
+    schemaVersion: 3,
     league,
   }
 }
@@ -145,8 +215,8 @@ function migrateSave(
   let save: GameState
 
   /*
-   * Saves anteriores ao sistema de versões
-   * são tratados como schema 0.
+   * Saves anteriores ao versionamento
+   * são considerados schema 0.
    */
   if (rawSave.schemaVersion === undefined) {
     save = migrateSchema0To1(rawSave)
@@ -155,6 +225,11 @@ function migrateSave(
       return null
     }
 
+    /*
+     * Nunca tentamos interpretar silenciosamente
+     * um save criado por uma versão estrutural
+     * mais nova do que esta versão do jogo conhece.
+     */
     if (
       rawSave.schemaVersion >
       CURRENT_SCHEMA_VERSION
@@ -170,10 +245,14 @@ function migrateSave(
   }
 
   /*
-   * Migrações são aplicadas sequencialmente.
+   * Cada migração acontece em sequência.
    *
-   * No futuro:
-   * 1 → 2 → 3 → 4...
+   * Exemplo futuro:
+   *
+   * 1 → 2 → 3 → 4 → 5
+   *
+   * Assim um save muito antigo não precisa
+   * conhecer diretamente o formato mais recente.
    */
   while (
     save.schemaVersion <
@@ -183,9 +262,11 @@ function migrateSave(
       case 1:
         save = migrateSchema1To2(save)
         break
+
       case 2:
         save = migrateSchema2To3(save)
         break
+
       default:
         console.error(
           `Não existe migração disponível para o schema ${save.schemaVersion}.`,
@@ -202,7 +283,8 @@ export function saveGame(
   state: GameState,
 ): void {
   try {
-    const serializedState = JSON.stringify(state)
+    const serializedState =
+      JSON.stringify(state)
 
     localStorage.setItem(
       SAVE_KEY,
@@ -240,8 +322,8 @@ export function loadGame(): GameState | null {
     }
 
     /*
-     * Persistimos novamente quando o save
-     * carregado passou por uma migração.
+     * Descobrimos qual era a versão original
+     * para saber se houve migração.
      */
     const originalVersion =
       isObject(rawSave) &&
@@ -249,6 +331,10 @@ export function loadGame(): GameState | null {
         ? rawSave.schemaVersion
         : 0
 
+    /*
+     * Se houve migração, persistimos imediatamente
+     * o save já no formato atualizado.
+     */
     if (
       originalVersion !==
       migratedSave.schemaVersion
