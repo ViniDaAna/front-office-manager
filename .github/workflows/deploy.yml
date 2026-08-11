@@ -35,7 +35,7 @@ jobs:
         run: npm run build -- --base=/front-office-manager/
 
       - name: Configurar GitHub Pages
-        uses: actions/configure-pages@v5
+       uses: actions/configure-pages@v6.0.0
 
       - name: Preparar arquivos para publicacao
         uses: actions/upload-pages-artifact@v4
