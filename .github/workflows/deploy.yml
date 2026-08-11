@@ -29,7 +29,8 @@ jobs:
 
       - name: Instalar dependencias
         run: npm ci
-
+      - name: Executar testes
+        run: npm test
       - name: Compilar jogo
         run: npm run build -- --base=/front-office-manager/
 
