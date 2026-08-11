@@ -7,4 +7,4 @@
  *
  * Não confundir com a versão pública do jogo.
  */
-export const CURRENT_SCHEMA_VERSION = 2
+export const CURRENT_SCHEMA_VERSION = 3
