@@ -8,8 +8,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -21,15 +19,16 @@ jobs:
 
     steps:
       - name: Baixar projeto
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Preparar Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: lts/*
+          node-version-file: .nvmrc
+          package-manager-cache: false
 
       - name: Instalar dependencias
-        run: npm install
+        run: npm ci
 
       - name: Compilar jogo
         run: npm run build -- --base=/front-office-manager/
@@ -45,6 +44,10 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
 
     environment:
       name: github-pages
