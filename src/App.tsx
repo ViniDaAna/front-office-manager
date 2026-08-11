@@ -140,8 +140,7 @@ const userManagement =
   ]
 
 const organizationDirection =
-  userManagement?.organizationDirection ??
-  state.organizationDirection
+  userManagement?.organizationDirection
   function openMessage(message: InboxMessage) {
     setState((current) =>
       current

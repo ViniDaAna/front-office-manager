@@ -49,4 +49,15 @@ describe('New Game Factory', () => {
       'Franquia inválida ao criar carreira',
     )
   })
+
+  it('não cria novos saves com o campo legado organizationDirection', () => {
+    const game = createNewGame('sas')
+
+    expect(
+      Object.prototype.hasOwnProperty.call(
+        game,
+        'organizationDirection',
+      ),
+    ).toBe(false)
+  })
 })

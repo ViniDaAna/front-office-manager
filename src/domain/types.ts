@@ -261,14 +261,13 @@ export interface GameState {
    * compatibilidade com saves criados antes
    * da introdução do LeagueState.
    */
-  league?: LeagueState
 
-  /*
-   * Campo legado do primeiro protótipo.
+   /*
+   * Estado do universo da carreira.
    *
-   * Será removido somente depois que a direção
-   * organizacional estiver completamente migrada
-   * para FranchiseManagementState.
+   * Está opcional temporariamente para manter
+   * compatibilidade com saves criados antes
+   * da introdução do LeagueState.
    */
-  organizationDirection?: OrganizationDirection
+  league?: LeagueState
 }
