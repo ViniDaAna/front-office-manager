@@ -1,0 +1,135 @@
+.franchise-grid {
+  align-items: start;
+}
+
+.franchise-card-objectives {
+  grid-column: 1 / -1;
+}
+
+.objectives-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.objectives-heading h3 {
+  margin-bottom: 0;
+}
+
+.objectives-summary {
+  color: #788595;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.objective-list {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.objective-item {
+  display: flex;
+  min-height: 190px;
+  flex-direction: column;
+  padding: 18px;
+  border: 1px solid #293441;
+  border-radius: 12px;
+  background: #0c131b;
+}
+
+.objective-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.objective-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 9px;
+  border: 1px solid #33404f;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.objective-status-active {
+  border-color: #40546a;
+  background: #14202c;
+  color: #b9cce0;
+}
+
+.objective-status-completed {
+  border-color: #315444;
+  background: #102019;
+  color: #9ed2b8;
+}
+
+.objective-status-failed {
+  border-color: #583b42;
+  background: #211317;
+  color: #ddaab3;
+}
+
+.objective-importance {
+  color: #d4b96e;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.objective-title {
+  margin: 0 0 10px;
+  color: #edf1f5;
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.franchise-card
+  .objective-item
+  .objective-description {
+  margin: 0;
+  color: #8f9cac;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+@media (max-width: 1050px) {
+  .objective-list {
+    grid-template-columns: 1fr;
+  }
+
+  .objective-item {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .objectives-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .objective-item-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .objective-item {
+    padding: 16px;
+  }
+}
