@@ -6,6 +6,10 @@ import type {
   OrganizationDirection,
 } from '../domain/types'
 
+import {
+  createInitialOwnerRelationship,
+} from './ownerRelationship'
+
 interface ObjectiveTemplate {
   key: string
   category: ObjectiveCategory
@@ -214,6 +218,9 @@ export function resolveOrganizationDirectionDecision(
       createdDate: state.currentDate,
     })
 
+  const relationship =
+    createInitialOwnerRelationship()
+
   const confirmationMessage:
     InboxMessage = {
     id: `decision-result-${decision.id}`,
@@ -242,6 +249,12 @@ export function resolveOrganizationDirectionDecision(
           organizationDirection: optionId,
 
           objectives,
+
+          ownerTrust:
+            relationship.ownerTrust,
+
+          jobSecurity:
+            relationship.jobSecurity,
         },
       },
     },

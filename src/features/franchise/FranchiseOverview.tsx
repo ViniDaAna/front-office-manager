@@ -1,5 +1,6 @@
 import type {
   GameState,
+  JobSecurity,
   ObjectiveStatus,
 } from '../../domain/types'
 
@@ -63,6 +64,54 @@ function getImportanceStars(
   )}`
 }
 
+function getJobSecurityLabel(
+  jobSecurity?: JobSecurity,
+): string {
+  if (jobSecurity === 'untouchable') {
+    return 'Intocável'
+  }
+
+  if (jobSecurity === 'secure') {
+    return 'Seguro'
+  }
+
+  if (jobSecurity === 'stable') {
+    return 'Estável'
+  }
+
+  if (jobSecurity === 'under-pressure') {
+    return 'Sob pressão'
+  }
+
+  if (jobSecurity === 'critical') {
+    return 'Crítico'
+  }
+
+  return 'Ainda não avaliada'
+}
+
+function getJobSecurityDescription(
+  jobSecurity: JobSecurity,
+): string {
+  if (jobSecurity === 'untouchable') {
+    return 'A direção tem enorme confiança no seu trabalho e sua posição dentro da organização é extremamente forte.'
+  }
+
+  if (jobSecurity === 'secure') {
+    return 'A direção está satisfeita com o seu trabalho e você possui boa margem para conduzir o projeto.'
+  }
+
+  if (jobSecurity === 'stable') {
+    return 'A direção confia no início do seu trabalho, mas espera que os compromissos assumidos sejam cumpridos.'
+  }
+
+  if (jobSecurity === 'under-pressure') {
+    return 'A confiança da direção caiu e suas próximas decisões terão peso maior sobre a avaliação do seu trabalho.'
+  }
+
+  return 'Sua posição está seriamente ameaçada. Resultados e decisões futuras poderão determinar sua permanência no cargo.'
+}
+
 interface FranchiseOverviewProps {
   state: GameState
 }
@@ -101,6 +150,21 @@ export default function FranchiseOverview({
       </section>
     )
   }
+
+  const hasOwnerEvaluation =
+    management.ownerTrust !== undefined &&
+    management.jobSecurity !== undefined
+
+  const normalizedOwnerTrust =
+    management.ownerTrust !== undefined
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            management.ownerTrust,
+          ),
+        )
+      : 0
 
   return (
     <div className="franchise-overview">
@@ -308,17 +372,78 @@ export default function FranchiseOverview({
             SITUAÇÃO DO GM
           </p>
 
-          <h3>
-            {management.jobSecurity
-              ? management.jobSecurity
-              : 'Ainda não avaliada'}
-          </h3>
+          {hasOwnerEvaluation &&
+          management.jobSecurity &&
+          management.ownerTrust !== undefined ? (
+            <>
+              <div className="gm-status-header">
+                <h3>
+                  {getJobSecurityLabel(
+                    management.jobSecurity,
+                  )}
+                </h3>
 
-          <p>
-            Segurança no cargo, confiança da direção
-            e aprovação da torcida serão sistemas
-            dinâmicos da carreira.
-          </p>
+                <span
+                  className={[
+                    'gm-security-badge',
+                    `gm-security-${management.jobSecurity}`,
+                  ].join(' ')}
+                >
+                  {management.ownerTrust}/100
+                </span>
+              </div>
+
+              <div className="gm-trust-heading">
+                <span>
+                  Confiança da direção
+                </span>
+
+                <strong>
+                  {management.ownerTrust}/100
+                </strong>
+              </div>
+
+              <div
+                className="gm-trust-track"
+                role="progressbar"
+                aria-label="Confiança da direção"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={
+                  normalizedOwnerTrust
+                }
+              >
+                <div
+                  className="gm-trust-fill"
+                  style={{
+                    width: `${normalizedOwnerTrust}%`,
+                  }}
+                />
+              </div>
+
+              <div className="gm-trust-scale">
+                <span>0</span>
+                <span>100</span>
+              </div>
+
+              <p>
+                {getJobSecurityDescription(
+                  management.jobSecurity,
+                )}
+              </p>
+            </>
+          ) : (
+            <>
+              <h3>Ainda não avaliada</h3>
+
+              <p>
+                A confiança da direção e sua
+                segurança no cargo serão definidas
+                quando os primeiros compromissos
+                forem assumidos.
+              </p>
+            </>
+          )}
         </article>
       </section>
     </div>

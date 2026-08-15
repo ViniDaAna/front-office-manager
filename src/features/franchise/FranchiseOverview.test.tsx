@@ -182,4 +182,66 @@ describe('Franchise Overview', () => {
       'Ativo',
     )
   })
+
+  it('mostra confiança da direção e segurança do cargo quando avaliadas', () => {
+    const game = createNewGame('sas')
+
+    const management =
+      game.league?.franchiseManagement.sas
+
+    if (!management) {
+      throw new Error(
+        'Estado administrativo do SAS não encontrado no teste.',
+      )
+    }
+
+    management.ownerTrust = 60
+    management.jobSecurity = 'stable'
+
+    const html = renderToStaticMarkup(
+      <FranchiseOverview state={game} />,
+    )
+
+    expect(html).toContain(
+      'Confiança da direção',
+    )
+
+    expect(html).toContain(
+      '60/100',
+    )
+
+    expect(html).toContain(
+      'Estável',
+    )
+  })
+
+  it('traduz situação de pressão para a interface', () => {
+    const game = createNewGame('sas')
+
+    const management =
+      game.league?.franchiseManagement.sas
+
+    if (!management) {
+      throw new Error(
+        'Estado administrativo do SAS não encontrado no teste.',
+      )
+    }
+
+    management.ownerTrust = 40
+
+    management.jobSecurity =
+      'under-pressure'
+
+    const html = renderToStaticMarkup(
+      <FranchiseOverview state={game} />,
+    )
+
+    expect(html).toContain(
+      'Sob pressão',
+    )
+
+    expect(html).toContain(
+      '40/100',
+    )
+  })
 })

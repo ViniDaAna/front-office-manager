@@ -236,6 +236,46 @@ describe('Owner Expectations', () => {
     ).toBe('active')
   })
 
+  it('inicia a confiança da direção quando os compromissos são assumidos', () => {
+    const game =
+      createGameWithDirectionDecision()
+
+    const resolved =
+      resolveOrganizationDirectionDecision(
+        game,
+        'initial-direction',
+        'balanced',
+      )
+
+    const management =
+      resolved.league
+        ?.franchiseManagement.sas
+
+    expect(
+      management?.ownerTrust,
+    ).toBe(60)
+  })
+
+  it('inicia a situação do GM como estável', () => {
+    const game =
+      createGameWithDirectionDecision()
+
+    const resolved =
+      resolveOrganizationDirectionDecision(
+        game,
+        'initial-direction',
+        'balanced',
+      )
+
+    const management =
+      resolved.league
+        ?.franchiseManagement.sas
+
+    expect(
+      management?.jobSecurity,
+    ).toBe('stable')
+  })
+
   it('marca a decisão como resolvida e registra a opção escolhida', () => {
     const game =
       createGameWithDirectionDecision()
@@ -325,6 +365,14 @@ describe('Owner Expectations', () => {
     expect(
       management?.objectives,
     ).toHaveLength(0)
+
+    expect(
+      management?.ownerTrust,
+    ).toBeUndefined()
+
+    expect(
+      management?.jobSecurity,
+    ).toBeUndefined()
 
     expect(
       game.decisions?.[0].status,
