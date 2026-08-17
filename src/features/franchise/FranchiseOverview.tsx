@@ -1,10 +1,16 @@
-import type { GameState } from '../../domain/types'
+import type {
+  GameState,
+  JobSecurity,
+  ObjectiveStatus,
+} from '../../domain/types'
 
 import {
   getUserFranchise,
   getUserFranchiseAlignment,
   getUserFranchiseManagement,
 } from '../../services/franchiseSelectors'
+
+import './FranchiseOverview.css'
 
 function getDirectionLabel(
   direction:
@@ -26,6 +32,84 @@ function getDirectionLabel(
   }
 
   return 'Ainda não definida'
+}
+
+function getObjectiveStatusLabel(
+  status: ObjectiveStatus,
+): string {
+  if (status === 'active') {
+    return 'Ativo'
+  }
+
+  if (status === 'completed') {
+    return 'Concluído'
+  }
+
+  return 'Falhou'
+}
+
+function getImportanceStars(
+  importance: number,
+): string {
+  const rating = Math.max(
+    0,
+    Math.min(
+      5,
+      Math.round(importance),
+    ),
+  )
+
+  return `${'★'.repeat(rating)}${'☆'.repeat(
+    5 - rating,
+  )}`
+}
+
+function getJobSecurityLabel(
+  jobSecurity?: JobSecurity,
+): string {
+  if (jobSecurity === 'untouchable') {
+    return 'Intocável'
+  }
+
+  if (jobSecurity === 'secure') {
+    return 'Seguro'
+  }
+
+  if (jobSecurity === 'stable') {
+    return 'Estável'
+  }
+
+  if (jobSecurity === 'under-pressure') {
+    return 'Sob pressão'
+  }
+
+  if (jobSecurity === 'critical') {
+    return 'Crítico'
+  }
+
+  return 'Ainda não avaliada'
+}
+
+function getJobSecurityDescription(
+  jobSecurity: JobSecurity,
+): string {
+  if (jobSecurity === 'untouchable') {
+    return 'A direção tem enorme confiança no seu trabalho e sua posição dentro da organização é extremamente forte.'
+  }
+
+  if (jobSecurity === 'secure') {
+    return 'A direção está satisfeita com o seu trabalho e você possui boa margem para conduzir o projeto.'
+  }
+
+  if (jobSecurity === 'stable') {
+    return 'A direção confia no início do seu trabalho, mas espera que os compromissos assumidos sejam cumpridos.'
+  }
+
+  if (jobSecurity === 'under-pressure') {
+    return 'A confiança da direção caiu e suas próximas decisões terão peso maior sobre a avaliação do seu trabalho.'
+  }
+
+  return 'Sua posição está seriamente ameaçada. Resultados e decisões futuras poderão determinar sua permanência no cargo.'
 }
 
 interface FranchiseOverviewProps {
@@ -66,6 +150,21 @@ export default function FranchiseOverview({
       </section>
     )
   }
+
+  const hasOwnerEvaluation =
+    management.ownerTrust !== undefined &&
+    management.jobSecurity !== undefined
+
+  const normalizedOwnerTrust =
+    management.ownerTrust !== undefined
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            management.ownerTrust,
+          ),
+        )
+      : 0
 
   return (
     <div className="franchise-overview">
@@ -140,36 +239,75 @@ export default function FranchiseOverview({
           )}
         </article>
 
-        <article className="franchise-card">
-          <p className="eyebrow">
-            OBJETIVOS
-          </p>
+        <article className="franchise-card franchise-card-objectives">
+          <div className="objectives-heading">
+            <div>
+              <p className="eyebrow">
+                OBJETIVOS
+              </p>
+
+              <h3>
+                {management.objectives.length > 0
+                  ? `${management.objectives.length} objetivos`
+                  : 'Nenhum objetivo definido'}
+              </h3>
+            </div>
+
+            {management.objectives.length > 0 && (
+              <span className="objectives-summary">
+                Compromissos com a direção
+              </span>
+            )}
+          </div>
 
           {management.objectives.length > 0 ? (
-            <>
-              <h3>
-                {management.objectives.length}{' '}
-                objetivo
-                {management.objectives.length > 1
-                  ? 's'
-                  : ''}
-              </h3>
+            <div className="objective-list">
+              {management.objectives.map(
+                (objective) => (
+                  <section
+                    className="objective-item"
+                    key={objective.id}
+                  >
+                    <div className="objective-item-header">
+                      <span
+                        className={[
+                          'objective-status',
+                          `objective-status-${objective.status}`,
+                        ].join(' ')}
+                      >
+                        {getObjectiveStatusLabel(
+                          objective.status,
+                        )}
+                      </span>
 
-              <p>
-                Existem metas ativas definidas pela
-                organização.
-              </p>
-            </>
+                      <span
+                        className="objective-importance"
+                        aria-label={`Importância ${objective.importance}/5`}
+                        title={`Importância ${objective.importance}/5`}
+                      >
+                        {getImportanceStars(
+                          objective.importance,
+                        )}
+                      </span>
+                    </div>
+
+                    <h4 className="objective-title">
+                      {objective.title}
+                    </h4>
+
+                    <p className="objective-description">
+                      {objective.description}
+                    </p>
+                  </section>
+                ),
+              )}
+            </div>
           ) : (
-            <>
-              <h3>Nenhum objetivo definido</h3>
-
-              <p>
-                Os objetivos serão gerados quando o
-                sistema de expectativas do
-                proprietário estiver completo.
-              </p>
-            </>
+            <p>
+              Os objetivos serão gerados quando o
+              sistema de expectativas do proprietário
+              estiver completo.
+            </p>
           )}
         </article>
 
@@ -180,7 +318,9 @@ export default function FranchiseOverview({
 
           {management.finances ? (
             <>
-              <h3>Dados financeiros disponíveis</h3>
+              <h3>
+                Dados financeiros disponíveis
+              </h3>
 
               <p>
                 O módulo financeiro está carregado
@@ -232,17 +372,78 @@ export default function FranchiseOverview({
             SITUAÇÃO DO GM
           </p>
 
-          <h3>
-            {management.jobSecurity
-              ? management.jobSecurity
-              : 'Ainda não avaliada'}
-          </h3>
+          {hasOwnerEvaluation &&
+          management.jobSecurity &&
+          management.ownerTrust !== undefined ? (
+            <>
+              <div className="gm-status-header">
+                <h3>
+                  {getJobSecurityLabel(
+                    management.jobSecurity,
+                  )}
+                </h3>
 
-          <p>
-            Segurança no cargo, confiança da direção
-            e aprovação da torcida serão sistemas
-            dinâmicos da carreira.
-          </p>
+                <span
+                  className={[
+                    'gm-security-badge',
+                    `gm-security-${management.jobSecurity}`,
+                  ].join(' ')}
+                >
+                  {management.ownerTrust}/100
+                </span>
+              </div>
+
+              <div className="gm-trust-heading">
+                <span>
+                  Confiança da direção
+                </span>
+
+                <strong>
+                  {management.ownerTrust}/100
+                </strong>
+              </div>
+
+              <div
+                className="gm-trust-track"
+                role="progressbar"
+                aria-label="Confiança da direção"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={
+                  normalizedOwnerTrust
+                }
+              >
+                <div
+                  className="gm-trust-fill"
+                  style={{
+                    width: `${normalizedOwnerTrust}%`,
+                  }}
+                />
+              </div>
+
+              <div className="gm-trust-scale">
+                <span>0</span>
+                <span>100</span>
+              </div>
+
+              <p>
+                {getJobSecurityDescription(
+                  management.jobSecurity,
+                )}
+              </p>
+            </>
+          ) : (
+            <>
+              <h3>Ainda não avaliada</h3>
+
+              <p>
+                A confiança da direção e sua
+                segurança no cargo serão definidas
+                quando os primeiros compromissos
+                forem assumidos.
+              </p>
+            </>
+          )}
         </article>
       </section>
     </div>

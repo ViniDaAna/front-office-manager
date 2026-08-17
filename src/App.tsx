@@ -9,6 +9,7 @@ import type {
 } from './domain/types'
 import FranchiseOverview from './features/franchise/FranchiseOverview'
 import { createNewGame } from './services/newGame'
+import { resolveOrganizationDirectionDecision } from './services/ownerExpectations'
 import { advanceOneDay } from './services/simulation'
 import {
   clearGame,
@@ -24,20 +25,6 @@ function formatDate(iso: string) {
     month: 'short',
     year: 'numeric',
   }).format(new Date(`${iso}T12:00:00`))
-}
-
-function getDecisionResultText(
-  optionId: string,
-): string {
-  if (optionId === 'win-now') {
-    return 'Você deixou claro que resultados imediatos são a prioridade. A direção espera agressividade na montagem do elenco e não aceitará facilmente uma temporada abaixo das expectativas.'
-  }
-
-  if (optionId === 'balanced') {
-    return 'Você prometeu competir sem hipotecar o futuro da organização. A direção espera equilíbrio entre resultados, desenvolvimento e flexibilidade financeira.'
-  }
-
-  return 'Você pediu paciência para construir uma estrutura sustentável. A direção aceitará algum sacrifício imediato, mas espera desenvolvimento de jovens e acúmulo inteligente de ativos.'
 }
 
 function directionLabel(
@@ -244,104 +231,26 @@ export default function App() {
     decision: Decision,
     optionId: string,
   ) {
-    setState((current) => {
-      if (!current) {
-        return current
-      }
+    if (!state) {
+      return
+    }
 
-      const validDirections:
-        OrganizationDirection[] = [
-        'win-now',
-        'balanced',
-        'rebuild',
-      ]
-
-      const currentManagement =
-        current.league?.franchiseManagement[
-          current.userFranchiseId
-        ]
-
-      if (
-        !current.league ||
-        !currentManagement
-      ) {
-        console.error(
-          'Não foi possível encontrar o estado administrativo da franquia do usuário.',
-        )
-
-        return current
-      }
-
-      if (
-        !validDirections.includes(
-          optionId as OrganizationDirection,
-        )
-      ) {
-        console.error(
-          `Direção organizacional inválida: ${optionId}`,
-        )
-
-        return current
-      }
-
-      const direction =
-        optionId as OrganizationDirection
-
-      const confirmationMessage:
-        InboxMessage = {
-        id: `decision-result-${decision.id}`,
-        date: current.currentDate,
-        category: decision.category,
-        title:
-          'Direção da franquia definida',
-        body: getDecisionResultText(
+    try {
+      const nextState =
+        resolveOrganizationDirectionDecision(
+          state,
+          decision.id,
           optionId,
-        ),
-        read: false,
-        kind: 'information',
-      }
+        )
 
-      return {
-        ...current,
-
-        league: {
-          ...current.league,
-
-          franchiseManagement: {
-            ...current.league
-              .franchiseManagement,
-
-            [current.userFranchiseId]: {
-              ...currentManagement,
-              organizationDirection:
-                direction,
-            },
-          },
-        },
-
-        decisions:
-          current.decisions?.map(
-            (item) =>
-              item.id === decision.id
-                ? {
-                    ...item,
-                    status: 'resolved',
-                    selectedOptionId:
-                      optionId,
-                    resolvedDate:
-                      current.currentDate,
-                  }
-                : item,
-          ) ?? [],
-
-        inbox: [
-          confirmationMessage,
-          ...current.inbox,
-        ],
-      }
-    })
-
-    setSelectedDecisionId(null)
+      setState(nextState)
+      setSelectedDecisionId(null)
+    } catch (error) {
+      console.error(
+        'Não foi possível resolver a decisão.',
+        error,
+      )
+    }
   }
 
   function resetCareer() {
@@ -429,8 +338,7 @@ export default function App() {
               className="continue-button"
               onClick={continueDay}
             >
-              {pendingDecisions.length >
-              0
+              {pendingDecisions.length > 0
                 ? 'RESOLVER DECISÃO ›'
                 : 'CONTINUAR ›'}
             </button>
