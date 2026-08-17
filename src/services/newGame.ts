@@ -1,5 +1,6 @@
 import { franchises } from '../data/franchises'
 import { CURRENT_SCHEMA_VERSION } from '../domain/schema'
+
 import type {
   FranchiseManagementState,
   GameState,
@@ -7,9 +8,14 @@ import type {
   LeagueState,
 } from '../domain/types'
 
+import {
+  createInitialSeasonState,
+} from './seasonState'
+
 const START_DATE = '2026-08-07'
 
-function createInitialInbox(): InboxMessage[] {
+function createInitialInbox():
+  InboxMessage[] {
   return [
     {
       id: 'welcome-1',
@@ -34,10 +40,11 @@ function createInitialInbox(): InboxMessage[] {
   ]
 }
 
-function createInitialFranchiseManagement(): Record<
-  string,
-  FranchiseManagementState
-> {
+function createInitialFranchiseManagement():
+  Record<
+    string,
+    FranchiseManagementState
+  > {
   return Object.fromEntries(
     franchises.map((franchise) => [
       franchise.id,
@@ -49,11 +56,17 @@ function createInitialFranchiseManagement(): Record<
   )
 }
 
-function createInitialLeagueState(): LeagueState {
+function createInitialLeagueState():
+  LeagueState {
   return {
-    franchiseManagement: createInitialFranchiseManagement(),
+    franchiseManagement:
+      createInitialFranchiseManagement(),
+
+    season:
+      createInitialSeasonState(),
   }
 }
+
 function validateInitialLeagueState(
   league: LeagueState,
 ): void {
@@ -61,9 +74,13 @@ function validateInitialLeagueState(
     (franchise) => franchise.id,
   )
 
-  const uniqueFranchiseIds = new Set(franchiseIds)
+  const uniqueFranchiseIds =
+    new Set(franchiseIds)
 
-  if (uniqueFranchiseIds.size !== franchises.length) {
+  if (
+    uniqueFranchiseIds.size !==
+    franchises.length
+  ) {
     throw new Error(
       'Existem IDs de franquia duplicados nos dados da liga.',
     )
@@ -73,40 +90,83 @@ function validateInitialLeagueState(
     league.franchiseManagement,
   )
 
-  if (managementIds.length !== franchises.length) {
+  if (
+    managementIds.length !==
+    franchises.length
+  ) {
     throw new Error(
       `Estado inicial inválido: esperado ${franchises.length} franquias, encontrado ${managementIds.length}.`,
     )
   }
 
-  const missingFranchises = franchiseIds.filter(
-    (franchiseId) =>
-      !league.franchiseManagement[franchiseId],
+  const missingManagement =
+    franchiseIds.filter(
+      (franchiseId) =>
+        !league.franchiseManagement[
+          franchiseId
+        ],
+    )
+
+  if (missingManagement.length > 0) {
+    throw new Error(
+      `Franquias ausentes no estado administrativo: ${missingManagement.join(', ')}`,
+    )
+  }
+
+  const recordIds = Object.keys(
+    league.season.franchiseRecords,
   )
 
-  if (missingFranchises.length > 0) {
+  if (
+    recordIds.length !==
+    franchises.length
+  ) {
     throw new Error(
-      `Franquias ausentes no estado inicial: ${missingFranchises.join(', ')}`,
+      `Temporada inicial inválida: esperado ${franchises.length} campanhas, encontrado ${recordIds.length}.`,
+    )
+  }
+
+  const missingRecords =
+    franchiseIds.filter(
+      (franchiseId) =>
+        !league.season
+          .franchiseRecords[
+            franchiseId
+          ],
+    )
+
+  if (missingRecords.length > 0) {
+    throw new Error(
+      `Franquias sem campanha na temporada: ${missingRecords.join(', ')}`,
     )
   }
 }
+
 export function createNewGame(
   userFranchiseId: string,
 ): GameState {
-  const franchiseExists = franchises.some(
-    (franchise) => franchise.id === userFranchiseId,
-  )
+  const franchiseExists =
+    franchises.some(
+      (franchise) =>
+        franchise.id ===
+        userFranchiseId,
+    )
 
   if (!franchiseExists) {
     throw new Error(
       `Franquia inválida ao criar carreira: ${userFranchiseId}`,
     )
   }
-const league = createInitialLeagueState()
 
-validateInitialLeagueState(league)
+  const league =
+    createInitialLeagueState()
+
+  validateInitialLeagueState(league)
+
   return {
-schemaVersion: CURRENT_SCHEMA_VERSION,
+    schemaVersion:
+      CURRENT_SCHEMA_VERSION,
+
     currentDate: START_DATE,
     userFranchiseId,
 
